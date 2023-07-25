@@ -7,6 +7,7 @@ var vehicleTypeList = ['4Cylinders',
                        '8Cylinders',
                        'Diesel',
                        'EV'];
+var open_view_all = false;
 
 var tooltip = d3.select("body")
     .append("div")
@@ -22,7 +23,30 @@ var tooltip = d3.select("body")
 function changeVehicleType(vehicleType){
     var svg = d3.select('#svg1');
     svg.selectAll("*").remove();
-    currentSelectedVehicleType = vehicleType;
+    if (vehicleType == 'next'){
+        switch(currentSelectedVehicleType){
+            case '4Cylinders':
+                currentSelectedVehicleType = '6Cylinders';
+                break;
+            case '6Cylinders':
+                currentSelectedVehicleType = '8Cylinders';
+                break;
+            case '8Cylinders':
+                currentSelectedVehicleType = 'Diesel';
+                break;
+            case 'Diesel':
+                currentSelectedVehicleType = 'EV';
+                document.getElementById('4cylinders').style.visibility = 'visible';
+                document.getElementById('6cylinders').style.visibility = 'visible';
+                document.getElementById('8cylinders').style.visibility = 'visible';
+                document.getElementById('diesel').style.visibility = 'visible';
+                document.getElementById('electric').style.visibility = 'visible';
+                document.getElementById('next').style.visibility = 'hidden';
+                break;
+        }
+    }else{
+        currentSelectedVehicleType = vehicleType;
+    }
     var visualization;
     switch(currentSelectedVehicleType){
         case '4Cylinders':
@@ -30,7 +54,6 @@ function changeVehicleType(vehicleType){
                 if (d["EngineCylinders"] <= 4 && d["EngineCylinders"] > 0 && d["Fuel"] == "Gasoline")
                     return d;})
             document.getElementById("selected_title").innerHTML = "Selected Engine Type: Gasoline Engine with no more than 4 Cylinders";
-
             break;
         case '6Cylinders':
             visualization = data_g.filter(function(d){
@@ -149,6 +172,11 @@ async function initialization() {
                     if (d["EngineCylinders"] <= 4 && d["EngineCylinders"] > 0 && d["Fuel"] == "Gasoline")
                         return d;})
     document.getElementById("selected_title").innerHTML = "Selected Engine Type: Gasoline Engine with no more than 4 Cylinders"
+    document.getElementById('4cylinders').style.visibility = 'hidden';
+    document.getElementById('6cylinders').style.visibility = 'hidden';
+    document.getElementById('8cylinders').style.visibility = 'hidden';
+    document.getElementById('diesel').style.visibility = 'hidden';
+    document.getElementById('electric').style.visibility = 'hidden';
 
     var min_y = Math.min(d3.min(visualization, function(d){
                         return parseInt(d.AverageCityMPG); }),
