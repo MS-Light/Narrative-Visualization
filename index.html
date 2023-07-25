@@ -1,1 +1,38 @@
-<h1>Hello!</h1>
+<!DOCTYPE html>
+<html>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+<head>
+    <title>Fuel Efficiency</title>
+    <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body onload="initialization();">
+    <h1 id="intro">Fuel Efficiency of Vehicles in 2017</h1>
+    <div>
+        <h3>
+            As automotive enthusiasts and environmentally-conscious individuals alike, understanding the relationship between these factors 
+            is crucial in making informed decisions about our vehicles and their impact on both our wallets and the environment.
+
+            Since everyone's financial situation varies, and finding a vehicle that meets both performance and budget is essential.
+            It is important to separate the affordable daily vehicles and high-performance machines.
+
+            In this page, we have compiled data from a wide range of car makes, encompassing popular brands and models from 2017, to offer 
+            a detailed perspective on how different engine type and car makes can affect fuel efficiency.
+        </h3>
+        <hr>
+
+    </div>
+    <h2 id="one">Which car make gives better mileage?</h2>
+    <p id="selected_title">Selected Engine Type: </p>
+    <div>
+        <button id="4cylinders" onclick ="changeVehicleType('4Cylinders')">4- Cylinders</button>
+        <button id="6cylinders" onclick ="changeVehicleType('6Cylinders')">6 Cylinders</button>
+        <button id="8cylinders" onclick ="changeVehicleType('8Cylinders')">8+ Cylinders</button>
+        <button id="diesel" onclick     ="changeVehicleType('Diesel')">Diesel</button>
+        <button id="electric" onclick   ="changeVehicleType('EV')">Electric</button>
+    </div>
+    <svg id="svg1" width=1000 height=1000></svg>
+
+    <script src="CM2017.js"></script>
+</body>
+</html>
