@@ -8,6 +8,15 @@ var vehicleTypeList = ['4Cylinders',
                        'Diesel',
                        'EV'];
 var open_view_all = false;
+var average_city_gas = "";
+var average_highway_gas = "";
+var average_city_diesel = "";
+var average_highway_diesel = "";
+var average_city_ev = "";
+var average_highway_ev = "";
+var gasoline_data = "";
+var diesel_data = "";
+var electric_data = "";
 
 var tooltip = d3.select("body")
     .append("div")
@@ -33,6 +42,12 @@ function changeVehicleType(vehicleType){
                 break;
             case '8Cylinders':
                 currentSelectedVehicleType = 'Diesel';
+                diesel_data = data_g.filter(function(d){
+                    if (d["Fuel"] == "Diesel")
+                        return d;});
+                average_city_diesel = d3.mean(diesel_data, d => parseInt(d.AverageCityMPG));
+                average_highway_diesel = d3.mean(diesel_data, d => parseInt(d.AverageHighwayMPG));
+            
                 break;
             case 'Diesel':
                 currentSelectedVehicleType = 'EV';
@@ -42,6 +57,12 @@ function changeVehicleType(vehicleType){
                 document.getElementById('diesel').style.visibility = 'visible';
                 document.getElementById('electric').style.visibility = 'visible';
                 document.getElementById('next').style.visibility = 'hidden';
+                electric_data = data_g.filter(function(d){
+                    if (d["Fuel"] == "Electricity")
+                        return d;});
+                average_city_ev = d3.mean(electric_data, d => parseInt(d.AverageCityMPG));
+                average_highway_ev = d3.mean(electric_data, d => parseInt(d.AverageHighwayMPG));
+            
                 break;
         }
     }else{
@@ -92,6 +113,22 @@ function changeVehicleType(vehicleType){
 
 }
 
+function drawAnnotation(main_entry, average_city, average_highway, yScale, color1, color2, vehicle_type){
+    // add line to show the average city mpg
+    main_entry.append("line").style("stroke", color1)
+    .style("stroke-width", 3)
+    .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_city)).attr("y2", yScale(average_city));
+    main_entry.append("text").attr("x", innerWidth - 350).attr("y", yScale(average_city)+10).attr("font-size", "10").style("fill", color1)
+    .text("Average City MPG of "+vehicle_type+" Engine");
+        // add line to show the average highway mpg
+    main_entry.append("line").style("stroke", color2)
+    .style("stroke-width", 3)
+    .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_highway)).attr("y2", yScale(average_highway));
+    main_entry.append("text").attr("x", innerWidth - 370).attr("y", yScale(average_highway)+10).attr("font-size", "10").style("fill", color2)
+    .text("Average Highway MPG of "+vehicle_type+" Engine");
+    return;
+}
+
 function drawChart(svg, selected_data, min_y, max_y){
     
     var makes = selected_data.map(function(d){return d.Make});
@@ -109,7 +146,7 @@ function drawChart(svg, selected_data, min_y, max_y){
         .range([0, innerWidth - 100]);
 
     var yScale = d3.scaleLinear()
-        .domain([min_y - 1,max_y + 1])
+        .domain([Math.min(min_y - 1, 18),max_y + 1])
         .range([innerHeight - 100, 0]);
 
     var main_graph = svg.append("g");
@@ -146,7 +183,39 @@ function drawChart(svg, selected_data, min_y, max_y){
         })
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-0)+"px").style("left",(d3.event.pageX+10)+"px");})
         .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
-
+    if (average_city_gas != ""){
+        if (currentSelectedVehicleType == 'Diesel' || currentSelectedVehicleType == 'EV'){
+            drawAnnotation(main_entry, average_city_gas, average_highway_gas, yScale, "gray", "DimGray", "Gasoline");
+        }else{
+            drawAnnotation(main_entry, average_city_gas, average_highway_gas, yScale, "darkorange", "purple", "Gasoline");
+        }
+    }
+    if (average_city_diesel != ""){
+        if (currentSelectedVehicleType != 'Diesel'){
+            drawAnnotation(main_entry, average_city_diesel, average_highway_diesel, yScale, "gray", "DimGray", "Diesel");
+        }else{
+            drawAnnotation(main_entry, average_city_diesel, average_highway_diesel, yScale, "darkorange", "purple", "Diesel");
+        }
+    }
+    if (average_city_ev != ""){
+        if (currentSelectedVehicleType != 'EV'){
+            drawAnnotation(main_entry, average_city_ev, average_highway_ev, yScale, "gray", "DimGray", "EV");
+        }else{
+            drawAnnotation(main_entry, average_city_ev, average_highway_ev, yScale, "darkorange", "purple", "EV");
+        }
+    }
+    // add line to show the average city mpg
+    // main_entry.append("line").style("stroke", "orange")
+    // .style("stroke-width", 3)
+    // .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_city)).attr("y2", yScale(average_city));
+    // main_entry.append("text").attr("x", innerWidth - 350).attr("y", yScale(average_city)+10).attr("font-size", "10").style("fill", "darkorange")
+    // .text("Average CityMPG of Gasoline Engine");
+    //     // add line to show the average highway mpg
+    // main_entry.append("line").style("stroke", "purple")
+    // .style("stroke-width", 3)
+    // .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_highway)).attr("y2", yScale(average_highway));
+    // main_entry.append("text").attr("x", innerWidth - 370).attr("y", yScale(average_highway)+10).attr("font-size", "10").style("fill", "purple")
+    // .text("Average HighwayMPG of Gasoline Engine");
     var xAxis = d3.axisBottom(xScale);
     var yAxis = d3.axisLeft(yScale);
 
@@ -170,7 +239,13 @@ async function initialization() {
 
     visualization = data.filter(function(d){
                     if (d["EngineCylinders"] <= 4 && d["EngineCylinders"] > 0 && d["Fuel"] == "Gasoline")
-                        return d;})
+                        return d;});
+    gasoline_data = data.filter(function(d){
+        if (d["Fuel"] == "Gasoline")
+            return d;});
+    average_city_gas = d3.mean(gasoline_data, d => parseInt(d.AverageCityMPG));
+    average_highway_gas = d3.mean(gasoline_data, d => parseInt(d.AverageHighwayMPG));
+
     document.getElementById("selected_title").innerHTML = "Selected Engine Type: Gasoline Engine with no more than 4 Cylinders"
     document.getElementById('4cylinders').style.visibility = 'hidden';
     document.getElementById('6cylinders').style.visibility = 'hidden';
