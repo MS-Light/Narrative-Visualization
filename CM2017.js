@@ -27,6 +27,7 @@ var tooltip = d3.select("body")
     .attr("class", "tooltip")
     .style("border-radius", "5px")
     .style("padding", "15px")
+    .style("max-width", "150px")
     .style("color", "white");
 
 function changeVehicleType(vehicleType){
@@ -51,12 +52,6 @@ function changeVehicleType(vehicleType){
                 break;
             case 'Diesel':
                 currentSelectedVehicleType = 'EV';
-                document.getElementById('4cylinders').style.visibility = 'visible';
-                document.getElementById('6cylinders').style.visibility = 'visible';
-                document.getElementById('8cylinders').style.visibility = 'visible';
-                document.getElementById('diesel').style.visibility = 'visible';
-                document.getElementById('electric').style.visibility = 'visible';
-                document.getElementById('next').style.visibility = 'hidden';
                 electric_data = data_g.filter(function(d){
                     if (d["Fuel"] == "Electricity")
                         return d;});
@@ -64,6 +59,15 @@ function changeVehicleType(vehicleType){
                 average_highway_ev = d3.mean(electric_data, d => parseInt(d.AverageHighwayMPG));
             
                 break;
+            case 'EV':
+                currentSelectedVehicleType = 'ALL';
+                document.getElementById('4cylinders').style.visibility = 'visible';
+                document.getElementById('6cylinders').style.visibility = 'visible';
+                document.getElementById('8cylinders').style.visibility = 'visible';
+                document.getElementById('diesel').style.visibility = 'visible';
+                document.getElementById('electric').style.visibility = 'visible';
+                document.getElementById('all').style.visibility = 'visible';
+                document.getElementById('next').style.visibility = 'hidden';
         }
     }else{
         currentSelectedVehicleType = vehicleType;
@@ -100,6 +104,10 @@ function changeVehicleType(vehicleType){
                     return d;})
             document.getElementById("selected_title").innerHTML = "Selected Engine Type: Electric Engine";
             break;
+        case 'ALL':
+            visualization = data_g
+            document.getElementById("selected_title").innerHTML = "Selected Engine Type: ALL Engine";
+            break;
     }
     var min_y = Math.min(d3.min(visualization, function(d){
                 return parseInt(d.AverageCityMPG); }),
@@ -117,13 +125,13 @@ function drawAnnotation(main_entry, average_city, average_highway, yScale, color
     // add line to show the average city mpg
     main_entry.append("line").style("stroke", color1)
     .style("stroke-width", 3)
-    .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_city)).attr("y2", yScale(average_city));
+    .attr("x1",0).attr("x2",innerWidth - 200).attr("y1", yScale(average_city)).attr("y2", yScale(average_city));
     main_entry.append("text").attr("x", innerWidth - 350).attr("y", yScale(average_city)+10).attr("font-size", "10").style("fill", color1)
     .text("Average City MPG of "+vehicle_type+" Engine");
         // add line to show the average highway mpg
     main_entry.append("line").style("stroke", color2)
     .style("stroke-width", 3)
-    .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_highway)).attr("y2", yScale(average_highway));
+    .attr("x1",0).attr("x2",innerWidth - 200).attr("y1", yScale(average_highway)).attr("y2", yScale(average_highway));
     main_entry.append("text").attr("x", innerWidth - 370).attr("y", yScale(average_highway)+10).attr("font-size", "10").style("fill", color2)
     .text("Average Highway MPG of "+vehicle_type+" Engine");
     return;
@@ -143,7 +151,7 @@ function drawChart(svg, selected_data, min_y, max_y){
 
     var xScale = d3.scaleBand()
         .domain(selected_data.map(function (d) { return d.Make; }))
-        .range([0, innerWidth - 100]);
+        .range([0, innerWidth - 200]);
 
     var yScale = d3.scaleLinear()
         .domain([Math.min(min_y - 1, 18),max_y + 1])
@@ -152,17 +160,19 @@ function drawChart(svg, selected_data, min_y, max_y){
     var main_graph = svg.append("g");
     var main_entry = main_graph.attr("transform", "translate(50,50)")
         .selectAll("rect").data(selected_data).enter();
+    var block_height = Math.min((innerHeight - 100)/(max_y - Math.min(min_y - 1, 18)) - 2, 10);
     main_entry.append("rect")
         .attr('x',function(d,i) {return xScale(d.Make);})
-        .attr('y',function(d,i) {return yScale(d.AverageCityMPG) - 5;})
+        .attr('y',function(d,i) {return yScale(d.AverageCityMPG) - block_height / 2;})
         .attr('width',xScale.bandwidth() - 5)
-        .attr('height',function(d,i) {return 10})
+        .attr('height',block_height)
         .attr("fill", "#f79d36")
         .on("mouseover", function(d){
             tooltip.text("Vehicle Make: " + d.Make)
-            .append('tspan').append("text").attr("dy", "1em").text(", Engine_Cylinders: " +d.EngineCylinders)
-            .append('tspan').append("text").attr("dy", "2em").text(", AvgCityMPG: " +d.AverageCityMPG)
-            .append('tspan').append("text").attr("dy", "3em").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
+            .append("text").text(", Fuel_type: " +d.Fuel)
+            .append("text").text(", Engine_Cylinders: " +d.EngineCylinders)
+            .append("text").text(", AvgCityMPG: " +d.AverageCityMPG)
+            .append("text").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
             return tooltip.style("visibility", "visible");
         })
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-20)+"px").style("left",(d3.event.pageX+20)+"px");})
@@ -170,15 +180,16 @@ function drawChart(svg, selected_data, min_y, max_y){
 
     main_entry.append("rect")
         .attr('x',function(d,i) {return xScale(d.Make);})
-        .attr('y',function(d,i) {return yScale(d.AverageHighwayMPG) - 5;})
+        .attr('y',function(d,i) {return yScale(d.AverageHighwayMPG) - block_height/2;})
         .attr('width',xScale.bandwidth() - 5)
-        .attr('height',function(d,i) {return 10})
+        .attr('height',block_height)
         .attr("fill", "#7452d9")
         .on("mouseover", function(d){
             tooltip.text("Vehicle Make: " + d.Make)
-            .append('tspan').append("text").attr("dy", "1em").text(", Engine_Cylinders: " +d.EngineCylinders)
-            .append('tspan').append("text").attr("dy", "2em").text(", AvgCityMPG: " +d.AverageCityMPG)
-            .append('tspan').append("text").attr("dy", "3em").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
+            .append("text").text(", Fuel_type: " +d.Fuel)
+            .append("text").text(", Engine_Cylinders: " +d.EngineCylinders)
+            .append("text").text(", AvgCityMPG: " +d.AverageCityMPG)
+            .append("text").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
             return tooltip.style("visibility", "visible");
         })
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-0)+"px").style("left",(d3.event.pageX+10)+"px");})
@@ -204,18 +215,7 @@ function drawChart(svg, selected_data, min_y, max_y){
             drawAnnotation(main_entry, average_city_ev, average_highway_ev, yScale, "darkorange", "purple", "EV");
         }
     }
-    // add line to show the average city mpg
-    // main_entry.append("line").style("stroke", "orange")
-    // .style("stroke-width", 3)
-    // .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_city)).attr("y2", yScale(average_city));
-    // main_entry.append("text").attr("x", innerWidth - 350).attr("y", yScale(average_city)+10).attr("font-size", "10").style("fill", "darkorange")
-    // .text("Average CityMPG of Gasoline Engine");
-    //     // add line to show the average highway mpg
-    // main_entry.append("line").style("stroke", "purple")
-    // .style("stroke-width", 3)
-    // .attr("x1",0).attr("x2",innerWidth - 100).attr("y1", yScale(average_highway)).attr("y2", yScale(average_highway));
-    // main_entry.append("text").attr("x", innerWidth - 370).attr("y", yScale(average_highway)+10).attr("font-size", "10").style("fill", "purple")
-    // .text("Average HighwayMPG of Gasoline Engine");
+
     var xAxis = d3.axisBottom(xScale);
     var yAxis = d3.axisLeft(yScale);
 
@@ -252,6 +252,7 @@ async function initialization() {
     document.getElementById('8cylinders').style.visibility = 'hidden';
     document.getElementById('diesel').style.visibility = 'hidden';
     document.getElementById('electric').style.visibility = 'hidden';
+    document.getElementById('all').style.visibility = 'hidden';
 
     var min_y = Math.min(d3.min(visualization, function(d){
                         return parseInt(d.AverageCityMPG); }),
