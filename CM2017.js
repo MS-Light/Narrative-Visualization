@@ -99,9 +99,10 @@ function drawChart(svg, selected_data, min_y, max_y){
         .attr('height',function(d,i) {return 10})
         .attr("fill", "#f79d36")
         .on("mouseover", function(d){
-            tooltip.text("Vehicle Make: " + d.Make); 
-            tooltip.append("text").attr("dy", "1em").text("\nAvgCityMPG: " +d.AverageCityMPG)
-            tooltip.append("text").attr("dy", "2em").text("\nAvgHighwayMPG: " +d.AverageHighwayMPG)
+            tooltip.text("Vehicle Make: " + d.Make)
+            .append('tspan').append("text").attr("dy", "1em").text(", Engine_Cylinders: " +d.EngineCylinders)
+            .append('tspan').append("text").attr("dy", "2em").text(", AvgCityMPG: " +d.AverageCityMPG)
+            .append('tspan').append("text").attr("dy", "3em").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
             return tooltip.style("visibility", "visible");
         })
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-20)+"px").style("left",(d3.event.pageX+20)+"px");})
@@ -115,8 +116,9 @@ function drawChart(svg, selected_data, min_y, max_y){
         .attr("fill", "#7452d9")
         .on("mouseover", function(d){
             tooltip.text("Vehicle Make: " + d.Make)
-            .append('tspan').append("text").attr("dy", "1em").text("\nAvgCityMPG: " +d.AverageCityMPG)
-            .append('tspan').append("text").attr("dy", "2em").text("\nAvgHighwayMPG: " +d.AverageHighwayMPG)
+            .append('tspan').append("text").attr("dy", "1em").text(", Engine_Cylinders: " +d.EngineCylinders)
+            .append('tspan').append("text").attr("dy", "2em").text(", AvgCityMPG: " +d.AverageCityMPG)
+            .append('tspan').append("text").attr("dy", "3em").text(", AvgHighwayMPG: " +d.AverageHighwayMPG)
             return tooltip.style("visibility", "visible");
         })
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-0)+"px").style("left",(d3.event.pageX+10)+"px");})
